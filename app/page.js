@@ -5,105 +5,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 /* -------------------- Static weekly predictions (fallback) -------------------- */
 
 const WEEKLY_PREDICTIONS = [
- // 🧙‍♂️ Ritualist Battles
- {
-  pid: "223",
-  question: "Meison vs Cutie Eric — who wins this Radiant Ritualist battle?",
-  yesLabel: "Meison",
-  noLabel: "Cutie Eric",
-},
-{
-  pid: "211",
-  question: "Moctx vs Joyesh — who wins this Ritualist battle?",
-  yesLabel: "Moctx",
-  noLabel: "Joyesh",
-},
-{
-  pid: "212",
-  question: "Itoshi vs Gurujji — who takes this Ritualist matchup?",
-  yesLabel: "Itoshi",
-  noLabel: "Gurujji",
-},
-{
-  pid: "213",
-  question: "Pixel vs Osargi — who’s the stronger Ritualist?",
-  yesLabel: "Pixel",
-  noLabel: "Osargi",
-},
-{
-  pid: "214",
-  question: "Marcellus vs Oluwasegun — who dominates this Ritualist round?",
-  yesLabel: "Marcellus",
-  noLabel: "Oluwasegun",
-},
-
-// ⚡ Ritty Battles
-{
-  pid: "215",
-  question: "Maharshi vs Kastew — who wins this Ritty battle?",
-  yesLabel: "Maharshi",
-  noLabel: "Kastew",
-},
-{
-  pid: "216",
-  question: "Harix vs Rajlol — who’s taking this Ritty matchup?",
-  yesLabel: "Harix",
-  noLabel: "Rajlol",
-},
-{
-  pid: "217",
-  question: "Cripson vs Oahid — who comes out on top?",
-  yesLabel: "Cripson",
-  noLabel: "Oahid",
-},
-{
-  pid: "224",
-  question: "Katty vs Anirudh — who wins this Ritty battle?",
-  yesLabel: "katty",
-  noLabel: "Anirudh",
-},
-{
-  pid: "218",
-  question: "Preshy vs JT — who wins this Ritty faceoff?",
-  yesLabel: "Preshy",
-  noLabel: "JT",
-},
-{
-  pid: "219",
-  question: "Tanoy vs Believe — who claims this Ritty round?",
-  yesLabel: "Tanoy",
-  noLabel: "Believe",
-},
-
-// 🔹 Bitty Battles
-{
-  pid: "220",
-  question: "Rooh vs Palak — who wins this Bitty battle?",
-  yesLabel: "Rooh",
-  noLabel: "Palak",
-},
-{
-  pid: "221",
-  question: "TCmain vs Rahul — who takes this Bitty matchup?",
-  yesLabel: "TCmain",
-  noLabel: "Rahul",
-},
-{
-  pid: "222",
-  question: "Yuta vs Okustu — who dominates this Bitty round?",
-  yesLabel: "Yuta",
-  noLabel: "Okustu",
-},
-
-// ✨ Radiant Ritualist
-
-
-   
-
-
-
-
- 
 
  
 ];
@@ -540,6 +441,75 @@ export default function Home() {
   const [leaderboard, setLeaderboard] = useState([]);
   const [isMobile, setIsMobile] = useState(false);
   const [polySort, setPolySort] = useState("trending");
+
+  // ✅ AI state
+  const [aiMarkets, setAiMarkets] = useState([]);
+
+  // ✅ AI generator
+ function generateAIMarketsFromDocs() {
+  const signals = [
+    { topic: "AI Agents", context: "Autonomous on-chain agents" },
+    { topic: "EVM++", context: "Advanced programmable smart contracts" },
+    { topic: "TEE Execution", context: "Secure private AI compute" },
+    { topic: "Resonance", context: "Dynamic fee market for compute" },
+    { topic: "Symphony", context: "Execute once verify many times" },
+    { topic: "Chain Abstraction", context: "Cross-chain execution layer" },
+  ];
+
+  const questionTemplates = [
+    (t) => `Will ${t} become a core primitive in Ritual?`,
+    (t) => `Will ${t} unlock new types of on-chain applications?`,
+    (t) => `Will developers actively build using ${t}?`,
+    (t) => `Will ${t} outperform existing blockchain solutions?`,
+    (t) => `Will ${t} introduce new execution patterns on-chain?`,
+    (t) => `Will ${t} drive meaningful ecosystem activity?`,
+    (t) => `Will ${t} change how users interact with smart contracts?`,
+    (t) => `Will ${t} enable new categories of dApps?`,
+    (t) => `Will ${t} push the limits of on-chain computation?`,
+    (t) => `Will ${t} become a defining feature of Ritual?`,
+  ];
+
+  let id = 0;
+  const markets = [];
+
+  signals.forEach((s) => {
+    questionTemplates.forEach((template) => {
+      markets.push({
+        pid: `ai-${id++}`,
+        question: template(s.topic),
+        yesLabel: "YES",
+        noLabel: "NO",
+        source: "ai",
+        signal: s.context,
+        confidence: ["low", "medium", "high"][id % 3],
+        hype: generateHype(s.topic),
+      });
+    });
+  });
+
+  // Optional: shuffle so it feels dynamic
+  const shuffled = markets.sort(() => Math.random() - 0.5);
+
+  // Limit to ~15–20 clean markets
+  setAiMarkets(shuffled.slice(0, 18));
+}
+
+ function generateHype(topic) {
+  const lines = [
+    `${topic} is gaining strong signal inside Ritual.`,
+    `Builders are actively exploring ${topic}.`,
+    `${topic} is emerging as a key narrative.`,
+    `Early activity suggests momentum around ${topic}.`,
+    `${topic} could reshape how Ritual apps are built.`,
+  ];
+
+  return lines[Math.floor(Math.random() * lines.length)];
+}
+
+  // ✅ Auto-run AI generator
+  useEffect(() => {
+    generateAIMarketsFromDocs();
+  }, []);
 
   /* ---------- Theme persistence ---------- */
   useEffect(() => {
@@ -1118,27 +1088,33 @@ export default function Home() {
   const weeklySet = useMemo(() => new Set(WEEKLY_PREDICTIONS.map((w) => w.pid)), []);
   const byPid = useMemo(() => Object.fromEntries(predictionsList.map((p) => [p.pid, p])), [predictionsList]);
 
+  // ✅ Combined list (AI + existing)
   const combined = useMemo(() => {
     const seen = new Set();
     const visible = [];
 
-    for (const p of predictionsList) {
+    const mergedList = [...aiMarkets, ...predictionsList];
+
+    for (const p of mergedList) {
       const pid = String(p.pid);
-      const norm = normalizePid(pid);
-      if (weeklySet.has(norm) && pid !== norm) continue;
-      const canonical = byPid[norm] || p;
-      const question = canonical.question ? String(canonical.question).trim() : "";
+      if (seen.has(pid)) continue;
+      seen.add(pid);
+
+      const question = (p.question || "").trim();
       if (!question) continue;
-      if (canonical.source !== "client" && /^prediction\s*\d+$/i.test(question)) continue;
-      if (seen.has(norm)) continue;
-      seen.add(norm);
-      visible.push(canonical);
+
+      visible.push(p);
     }
 
     if (!searchQuery) return visible;
+
     const q = searchQuery.toLowerCase();
-    return visible.filter((p) => (((p.question || "") + " " + (p.yesLabel || "") + " " + (p.noLabel || "")).toLowerCase().includes(q)));
-  }, [predictionsList, byPid, weeklySet, searchQuery]);
+    return visible.filter((p) =>
+      ((p.question || "") + " " + (p.yesLabel || "") + " " + (p.noLabel || ""))
+        .toLowerCase()
+        .includes(q)
+    );
+  }, [aiMarkets, predictionsList, searchQuery]);
 
   /* ---------- Styles ---------- */
 const pageStyle = {
@@ -1157,8 +1133,6 @@ const pageStyle = {
   fontFamily:
     "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
 };
-
-
 
   const headerStyle = {
     display: "flex",
@@ -1388,6 +1362,43 @@ const pageStyle = {
 
                 return (
                   <div key={p.pid} style={cardStyle} className="card">
+                    {/* ✅ AI badge / signal / hype */}
+                    {p.source === "ai" && (
+                      <div style={{ marginBottom: 12 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{
+                            fontSize: 11,
+                            padding: "4px 10px",
+                            borderRadius: 999,
+                            background: "rgba(16,185,129,0.15)",
+                            color: "#10b981",
+                            fontWeight: 600
+                          }}>
+                            🤖 AI Market
+                          </span>
+
+                          <span style={{ fontSize: 11, color: "#888" }}>
+                            {p.confidence}
+                          </span>
+                        </div>
+
+                        <div style={{ fontSize: 12, color: "#666", marginTop: 4 }}>
+                          {p.signal}
+                        </div>
+
+                        <div style={{
+                          marginTop: 8,
+                          padding: "10px",
+                          borderRadius: 10,
+                          background: "rgba(16,185,129,0.08)",
+                          fontSize: 13,
+                          fontStyle: "italic"
+                        }}>
+                          {p.hype}
+                        </div>
+                      </div>
+                    )}
+
                     <div style={{ marginBottom: 20 }}>
                       <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, lineHeight: 1.4, color: theme === "dark" ? "#fff" : "#111" }}>
                         {questionText}
@@ -1684,7 +1695,6 @@ const pageStyle = {
       </main>
     );
   }
-
   /* ------------------------- Common CSS & styles ------------------------- */
   function commonCss(theme) {
     return `
